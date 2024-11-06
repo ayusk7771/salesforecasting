@@ -1,0 +1,11 @@
+.DS_Store
+__pycache__/
+.ipynb_checkpoints
+datasets_dnt_track/
+create_cred.sh
+kaggle.json
+services/airflow/config/
+services/airflow/plugins/
+services/airflow/logs/
+services/airflow/spark_streaming_checkpoints/
+test_latest_4m.csv

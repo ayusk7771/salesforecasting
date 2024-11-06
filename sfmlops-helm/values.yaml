@@ -1,0 +1,45 @@
+# For a full on-cloud experience, feel free to change these
+# images to ones registered in the cloud registry.
+# GitHub Action in this project has already taken care
+# of pushing images to the cloud registry.
+containerMainImage:
+  dataProducer: ariya23156/sfmlops-data-producer
+  trainingService: ariya23156/sfmlops-training-service
+  forecastService: ariya23156/sfmlops-forecast-service
+  mlflow: ariya23156/sfmlops-mlflow
+  ray: ariya23156/sfmlops-ray:latest-amd64 # latest-amd64 OR latest-arm64
+  webUi: ariya23156/sfmlops-web-ui
+
+kafkaReleaseName: kafka-release
+kafkaNamespace: kafka
+
+webUiPort: 8000
+webUiLabel: web-ui
+
+trainingServiceLabel: training-service
+trainingServicePort: 4243
+
+forecastServiceLabel: forecast-service
+forecastServicePort: 4242
+
+mlflowPort: 5050
+mlflowLabel: mlflow
+mlflowPvcName: mlflow-pvc
+mlflowArtifactRoot: /storage/mlruns/
+
+postgresPort: 5432
+postgresLabel: postgres
+postgresPvcName: postgres-pvc
+postgresInitConfigMapName: postgres-init-configmap
+
+pgadminPort: 16543
+pgadminLabel: pgadmin
+pgadminPvcName: pgadmin-pvc
+
+kafkaUiPort: 8800
+kafkaUiLabel: kafka-ui
+
+dataProducerLabel: data-producer
+
+# This is also hardcoded in `values-airflow.yaml`
+sparkStreamingPvcName: spark-streaming-pvc

@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: training-service-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: {{ .Values.trainingServiceLabel }}
+  template:
+    metadata:
+      labels:
+        component: {{ .Values.trainingServiceLabel }}
+    spec:
+      containers:
+        - name: training-service
+          image: {{ .Values.containerMainImage.trainingService }}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: {{ .Values.trainingServicePort }}
+          envFrom:
+            - configMapRef:
+                name: global-configmap
+          env:
+            - name: RAY_DASHBOARD_HOST
+              value: ray-head-service
+            - name: RAY_DASHBOARD_PORT
+              value: "8265"
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: training-service-service
+spec:
+  type: ClusterIP
+  selector:
+    component: {{ .Values.trainingServiceLabel }}
+  ports:
+    - port: {{ .Values.trainingServicePort }}
+      targetPort: {{ .Values.trainingServicePort }}

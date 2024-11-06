@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: forecast-service-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: {{ .Values.forecastServiceLabel }}
+  template:
+    metadata:
+      labels:
+        component: {{ .Values.forecastServiceLabel }}
+    spec:
+      # this is a just-work solution for configuring permission for pvc,
+      # but introduces a security risk
+      # in real production, please setup user and group id properly in each image
+      # and assign enough permissions for that
+      initContainers:
+        - name: change-ownership-container
+          image: busybox
+          command: ["/bin/chmod", "-R", "777", {{ .Values.mlflowArtifactRoot }}] # Adjust mount path if needed
+          securityContext:
+            runAsUser: 0
+            privileged: true
+          volumeMounts:
+            - name: mlflow-data
+              mountPath: {{ .Values.mlflowArtifactRoot }}
+      volumes:
+        - name: mlflow-data
+          persistentVolumeClaim:
+            claimName: {{ .Values.mlflowPvcName }}
+      containers:
+        - name: forecast-service
+          image: {{ .Values.containerMainImage.forecastService }}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: {{ .Values.forecastServicePort }}
+          volumeMounts:
+            - name: mlflow-data
+              mountPath: {{ .Values.mlflowArtifactRoot }}
+          envFrom:
+            - configMapRef:
+                name: global-configmap
+          env:
+            - name: MLFLOW_TRACKING_URI
+              value: "http://mlflow-service:{{ .Values.mlflowPort }}"
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: forecast-service-service
+spec:
+  type: ClusterIP
+  selector:
+    component: {{ .Values.forecastServiceLabel }}
+  ports:
+    - port: {{ .Values.forecastServicePort }}
+      targetPort: {{ .Values.forecastServicePort }}

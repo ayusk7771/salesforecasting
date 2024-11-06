@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-ui-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: {{ .Values.webUiLabel }}
+  template:
+    metadata:
+      labels:
+        component: {{ .Values.webUiLabel }}
+    spec:
+      containers:
+        - name: web-ui
+          image: {{ .Values.containerMainImage.webUi }}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: {{ .Values.webUiPort }}
+          livenessProbe:
+            httpGet:
+              path: /_stcore/health
+              port: {{ .Values.webUiPort }}
+              scheme: HTTP
+            timeoutSeconds: 1
+          readinessProbe:
+            httpGet:
+              path: /_stcore/health
+              port: {{ .Values.webUiPort }}
+              scheme: HTTP
+            timeoutSeconds: 1
+          resources:
+            requests:
+              cpu: 100m
+              memory: 745Mi
+            limits:
+              cpu: 1
+              memory: 2Gi
+          envFrom:
+            - configMapRef:
+                name: global-configmap
+          env:
+            - name: TRAINING_SERVICE_SERVER
+              value: "training-service-service.mlops.svc.cluster.local:4243"
+            - name: TRAINING_SERVICE_URL_PREFIX
+              value: "" # this is intentional to pass in an empty string
+            - name: FORECAST_ENDPOINT_URL
+              value: "http://forecast-service-service.mlops.svc.cluster.local:4242/forecast"
+            - name: DB_CONNECTION_URL
+              value: "postgresql://spark_user:SuperSecurePwdHere@postgres-service:{{ .Values.postgresPort }}/spark_pg_db"
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-ui-service
+spec:
+  type: ClusterIP
+  selector:
+    component: {{ .Values.webUiLabel }}
+  ports:
+    - port: {{ .Values.webUiPort }}
+      targetPort: {{ .Values.webUiPort }}
